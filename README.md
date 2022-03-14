@@ -8,3 +8,12 @@ Use the installer -> https://mega.nz/file/y0cBhZCT#lfaka0JeISvTpBhFnt0KFf2lLCbY4
 or
 
 compile the source by installing the modules with ``npm install`` and then compile with ``npm run publish``
+
+## Demo
+
+![https://i.imgur.com/Sd8DRN9.gif](https://i.imgur.com/Sd8DRN9.gif)
+
+## Authors
+
+- [@Ambrodu](https://www.github.com/Ambrodu)
+
