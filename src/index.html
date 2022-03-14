@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>GasNotifier</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+    <div class="container">
+      <div>
+        <h1 class="text-center" style="font-size: 40px;">⛽</h1>
+        <h1 class="text-center" style="font-size: 20px;margin-top:-20px;">GAS NOTIFIER</h1>
+        <br><br>
+        <h4 class="text-center">Current price:</h4>
+        <h1 class="text-center" style="margin-top:-20px;" id="current_gwei">0 Gwei</h1>
+        <br><br>
+        <br><br>
+        <div id="start" class="btn btn-green" onclick="enable()">Enable</div>
+        <div id="stop" class="btn btn-red d-none" onclick="disable()">Disable</div>
+      </div>
+    </div>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const {ipcRenderer} = require('electron');
+    const axios = require('axios');
+    const cheerio = require('cheerio');
+    const fs = require('fs');
+
+    function sleep(ms) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    }
+
+    var current_gwei;
+
+    async function init() {
+      while(true){
+        await axios.get('https://ftmscan.com/gastracker', {}).then(({ data }) => {
+          const $ = cheerio.load(data); // Initialize cheerio
+          current_gwei = parseInt($("#standardgas").text().split(' ').shift());
+          //ipcRenderer.send('current_gwei', current_gwei);
+          document.getElementById("current_gwei").innerHTML = current_gwei + ' Gwei';
+        });
+        await sleep(1000);
+      }
+    }
+
+    init();
+
+    var run = 1;
+
+    async function start(alarm) {
+      run = 1;
+      while(run){
+        if(current_gwei <= alarm){
+          disable()
+          ipcRenderer.send('notif', current_gwei);
+          console.log('Done!');
+        }else{
+          console.log(current_gwei);
+        }
+        await sleep(1000);
+      }
+    }
+
+    async function disable(){
+      run = 0;
+      document.getElementById('stop').classList.add('d-none');
+      document.getElementById('start').classList.remove('d-none');
+    }
+
+    async function enable() {
+      const {value: text} = await Swal.fire({
+        icon: 'question',
+        title: 'Gas price:',
+        input: 'number',
+        inputValue: 250,
+        confirmButtonColor: '#13c4a3',
+        confirmButtonText: 'Set alarm',
+        inputAttributes: {
+          autocapitalize: 'off'
+        },
+        heightAuto: false,
+      });
+      if (text) {
+        /*Swal.fire(
+          'Alarm set!',
+          'Alarm set for '+text+' Gwei',
+          'success'
+        )*/
+        //ipcRenderer.send('start', text);
+        Swal.fire({
+          icon: 'success',
+          title: 'Alarm set!',
+          text: 'Alarm set for '+text+' Gwei',
+          confirmButtonColor: '#13c4a3',
+        });
+        document.getElementById('start').classList.add('d-none');
+        document.getElementById('stop').classList.remove('d-none');
+        start(text);
+      }
+    }
+  </script>
+</html>
